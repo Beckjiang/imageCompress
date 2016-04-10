@@ -1,6 +1,6 @@
 # imageCompress
 用file和canvas api实现的图片压缩的jquery插件。
-只有压缩质量和回调函数两个参数，使用简单，欢迎完善补充。
+只有压缩质量和一些过程处理函数，使用简单，欢迎完善补充。
 
 ```javascript
 $('#image').imageCompress({
