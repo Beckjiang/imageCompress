@@ -1,5 +1,7 @@
 +function ($) {
   'use strict';
+
+  var successCount = 0;
   /**
    * 闭包中的构造方法
    * @param evt 上传文件域的change事件对象
@@ -7,16 +9,30 @@
    */
   var ImageCompress = function (evt, options) {
     var that = this;
+    
     //读取图片
-    var originalImage = this.readFile(evt, function(originalImage){
+    var originalImage = this.readFile(evt, options.onloadStart, function(originalImage){
+      if(typeof options.onloadEnd === 'function'){
+        options.onloadEnd(originalImage);
+      }
+      
+      if(typeof options.oncompressStart === 'function'){
+        options.oncompressStart(originalImage);
+      }
+
       //读取完成，压缩图片
       var compressImage = that.compress(originalImage, options.quality, options.outputFormat);
 
-      //用户回调函数
-      if(typeof options.callback === 'function'){
-        options.callback(compressImage);
+      if(typeof options.oncompressEnd === 'function'){
+        options.oncompressEnd(compressImage);
       }
-    });
+
+      successCount++;
+
+      return compressImage;
+    }, options.callback);
+
+
   }
 
   // 原型方法
@@ -51,30 +67,42 @@
    * @param evt 上传文件域的change事件对象
    * @param onloadCallback 当文件读取完毕后的回调
    */
-  ImageCompress.prototype.readFile = function(evt, onloadCallback) {
+  ImageCompress.prototype.readFile = function(evt, onloadStart, onloadCallback, callback) {
     var files = evt.target.files;
+    var length = files.length;
 
     for (var i = 0, file; file = files[i]; i++) {
       // 只处理图片
       if (!file.type.match('image.*')) {
         continue;
       }
+      if(typeof onloadStart === 'function'){
+        onloadStart(file);
+      }
 
       var reader = new FileReader();
 
       // Closure to capture the file information.
-      reader.onload = (function(theFile) {
+      reader.onload = (function(theFile, index) {
         return function(e) {
           // Render thumbnail.
-          var i = new Image();
-          i.src = e.target.result;
-          if(typeof onloadCallback === 'function') onloadCallback(i);
+          var img = new Image();
+
+          img.src = e.target.result;
+          if(typeof onloadCallback === 'function') onloadCallback(img);
+
+          //用户回调函数
+          if(typeof callback === 'function' && successCount == length){
+            callback(img);
+            successCount = 0;
+          }
         };
       })(file);
 
         // Read in the image file as a data URL.
       reader.readAsDataURL(file);
     }
+
   }
 
   //默认参数
