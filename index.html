@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>JS压缩图片插件</title>
+	<meta charset="utf-8" />
+	<style type="text/css">
+		.preview {
+			width: 200px;
+		}
+	</style>
+</head>
+<body>
+<input type="file" id="image" />
+<div id="preview"></div>
+
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="jquery.imagecompress.js"></script>
+<script type="text/javascript">
+	$('#image').imageCompress({
+		'quality': 50,
+		'callback': function(result){
+			$('#preview').append(result);
+			$('#preview').find('img').addClass('preview');
+		}
+	});
+</script>
+</body>
+</html>
