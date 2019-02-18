@@ -11,17 +11,17 @@
     var that = this;
     
     //读取图片
-    var originalImage = this.readFile(evt, options.onloadStart, function(originalImage){
+    var originalImage = this.readFile(evt, options.onloadStart, function(){
       if(typeof options.onloadEnd === 'function'){
-        options.onloadEnd(originalImage);
+        options.onloadEnd(this);
       }
-      
+
       if(typeof options.oncompressStart === 'function'){
-        options.oncompressStart(originalImage);
+        options.oncompressStart(this);
       }
 
       //读取完成，压缩图片
-      var compressImage = that.compress(originalImage, options.quality, options.outputFormat);
+      var compressImage = that.compress(this, options.quality, options.outputFormat);
 
       if(typeof options.oncompressEnd === 'function'){
         options.oncompressEnd(compressImage);
@@ -29,8 +29,13 @@
 
       successCount++;
 
+      if(typeof options.callback === 'function' && successCount == length){
+          options.callback(compressImage);
+          successCount = 0;
+      }
+
       return compressImage;
-    }, options.callback);
+    });
 
 
   }
@@ -49,9 +54,9 @@
       mimeType = "image/png";
     }
 
-
     var cvs = document.createElement('canvas');
     //naturalWidth真实图片的宽度
+
     cvs.width = imageObj.naturalWidth;
     cvs.height = imageObj.naturalHeight;
     var ctx = cvs.getContext("2d").drawImage(imageObj, 0, 0);
@@ -67,7 +72,7 @@
    * @param evt 上传文件域的change事件对象
    * @param onloadCallback 当文件读取完毕后的回调
    */
-  ImageCompress.prototype.readFile = function(evt, onloadStart, onloadCallback, callback) {
+  ImageCompress.prototype.readFile = function(evt, onloadStart, onloadCallback) {
     var files = evt.target.files;
     var length = files.length;
 
@@ -88,14 +93,10 @@
           // Render thumbnail.
           var img = new Image();
 
-          img.src = e.target.result;
-          if(typeof onloadCallback === 'function') onloadCallback(img);
-
           //用户回调函数
-          if(typeof callback === 'function' && successCount == length){
-            callback(img);
-            successCount = 0;
-          }
+          img.onload = onloadCallback
+          img.src = e.target.result;
+
         };
       })(file);
 
